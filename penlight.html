@@ -16,7 +16,7 @@
     --focus:#0047FF;
     --font:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP","Meiryo",system-ui,sans-serif;
   }
-  /* ダークモード（端末の設定に合わせる） */
+  /* ダークモード */
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       color-scheme:dark;
@@ -113,7 +113,7 @@
   .note{margin:0;padding:16px 18px;border-radius:16px;border:2px solid var(--line);display:flex;flex-direction:column;gap:10px;list-style:none;font-size:15px;color:var(--mute)}
   .note li{line-height:2.1}
 
-  /* 点灯画面（テーマに関係なく同じ見た目） */
+  /* 点灯画面 */
   .light{position:fixed;inset:0;background:#000;z-index:10;touch-action:none}
   .hud{
     position:absolute;left:0;right:0;bottom:0;padding:16px 20px calc(28px + env(safe-area-inset-bottom,0px));
@@ -199,13 +199,12 @@
 <script>
 document.documentElement.lang = 'ja';
 
-// 読み上げ用：ふりがな（rt）を除いた文字だけを取り出す
 function plainText(html){
   const d = document.createElement('div'); d.innerHTML = html;
   d.querySelectorAll('rt,[aria-hidden="true"]').forEach(n=>n.remove());
   return d.textContent.replace(/\s+/g,' ').trim();
 }
-// ふりがな付きの文は、画面には表示・読み上げは漢字のみ（二重読みを防ぐ）
+
 function setRuby(el, html){
   el.innerHTML = `<span aria-hidden="true">${html}</span><span class="sr">${plainText(html)}</span>`;
 }
@@ -227,7 +226,7 @@ const COLORS = [
   {id:'pink',   hex:'#FF3FA8', plain:'ピンク', name:'ピンク'},
 ];
 const byId = Object.fromEntries(COLORS.map(c=>[c.id,c]));
-// カラーチェンジ：2秒点灯→1秒かけて黒へ→1秒かけて次の色へ
+
 const P_HOLD = 2000, P_DOWN = 1000, P_UP = 1000, PULSE = P_HOLD+P_DOWN+P_UP;
 const $ = s => document.getElementById(s);
 const SHOKU = '<ruby>色<rt>しょく</rt></ruby>';
@@ -294,7 +293,7 @@ $('clear').onclick = ()=>{state.multi = []; save(); render(); say('すべての�
 initRuby();
 render();
 
-// ---- 点灯 ----
+// 点灯
 const light = $('light'), hud = $('hud'), toast = $('toast');
 let raf=0, t0=0, seq=[], blink=false, wakeLock=null, hudTimer=0, toastTimer=0, lastName='', session=0;
 
@@ -304,9 +303,9 @@ const ease = t => t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
 function frame(now){
   const n = seq.length;
   let rgb, c;
-  if(!blink){ c = seq[0]; rgb = c.rgb; }            // ずっと点灯：同じ色のまま
+  if(!blink){ c = seq[0]; rgb = c.rgb; } 
   else{
-    // カラーチェンジ：2秒点灯 → 1秒かけて黒へ → 1秒かけて次の色へ（1色なら同じ色へ戻る）
+    // カラーチェンジ
     const e = Math.max(0, now-t0) % (PULSE*n);
     const i = Math.floor(e/PULSE), p = e - i*PULSE;
     const a = seq[i], b = seq[(i+1)%n];
@@ -323,7 +322,7 @@ async function keepAwake(){
   try{
     if(!('wakeLock' in navigator) || (wakeLock && !wakeLock.released)) return;
     const lock = await navigator.wakeLock.request('screen');
-    if(light.hidden){ lock.release().catch(()=>{}); return; }   // すでに戻っていたら手放す
+    if(light.hidden){ lock.release().catch(()=>{}); return; } 
     wakeLock = lock;
   }catch(e){}
 }
@@ -344,7 +343,6 @@ $('go').onclick = async ()=>{
   light.hidden = false;
   $('setup').setAttribute('aria-hidden','true');
   $('setup').inert = true;
-  // 点灯は全画面の結果を待たずにすぐ始める
   t0 = performance.now();
   cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
   keepAwake();
