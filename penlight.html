@@ -1,0 +1,388 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>スマホペンライト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap">
+<style>
+  /* ライトモード（基本） */
+  :root{
+    --bg:#F4F4F7;
+    --panel:#FFFFFF;
+    --line:#83838F;
+    --ink:#111118;
+    --mute:#3C3C48;
+    --sel-bg:#111118;
+    --sel-ink:#FFFFFF;
+    --sel-sub:#E4E4EA;
+    --focus:#0047FF;
+    --font:"BIZ UDPGothic","Hiragino Sans","Noto Sans JP","Meiryo",system-ui,sans-serif;
+  }
+  /* ダークモード（端末の設定に合わせる） */
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme:dark;
+      --bg:#000000; --panel:#1C1C22; --line:#6E6E7A; --ink:#FFFFFF; --mute:#D2D2DA;
+      --sel-bg:#FFFFFF; --sel-ink:#000000; --sel-sub:#2A2A32; --focus:#FFE600;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#000000; --panel:#1C1C22; --line:#6E6E7A; --ink:#FFFFFF; --mute:#D2D2DA;
+    --sel-bg:#FFFFFF; --sel-ink:#000000; --sel-sub:#2A2A32; --focus:#FFE600;
+  }
+
+  html,body{height:100%;}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--font);
+    font-size:17px;line-height:2.2;letter-spacing:.06em;
+    -webkit-tap-highlight-color:transparent;overscroll-behavior:none;
+    -webkit-user-select:none;user-select:none;-webkit-text-size-adjust:100%;
+  }
+  ruby rt{font-size:.55em;font-weight:400;letter-spacing:.02em}
+  button{font-family:var(--font);letter-spacing:.06em}
+  :focus-visible{outline:4px solid var(--focus);outline-offset:3px}
+  .sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+
+  .setup{
+    max-width:520px;margin:0 auto;min-height:100%;box-sizing:border-box;
+    padding:24px 20px 40px;display:flex;flex-direction:column;gap:44px;
+  }
+  header{display:flex;flex-direction:column;gap:14px}
+  header h1{font-size:32px;font-weight:700;line-height:1.4;margin:0;letter-spacing:.1em}
+  .rainbow{display:flex;height:8px;border-radius:4px;overflow:hidden}
+  .rainbow span{flex:1}
+  header p{margin:0;color:var(--mute)}
+
+  section{display:flex;flex-direction:column;gap:16px}
+  h2{font-size:20px;font-weight:700;margin:0;line-height:2}
+  h2 .step{display:inline-block;margin-right:.5em}
+
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .modes button{
+    appearance:none;border:3px solid var(--line);border-radius:18px;min-height:104px;padding:14px 8px;
+    background:var(--panel);color:var(--ink);cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    font-size:clamp(16px,4.6vw,19px);font-weight:700;line-height:1.9;letter-spacing:.03em;white-space:nowrap;
+  }
+  .modes button small{white-space:normal;text-align:center;font-size:14px;font-weight:400;line-height:1.9;color:var(--mute)}
+  .modes button[aria-pressed="true"]{background:var(--sel-bg);color:var(--sel-ink);border-color:var(--sel-bg)}
+  .modes button[aria-pressed="true"] small{color:var(--sel-sub)}
+  .modes .chk{display:none}
+  .modes button[aria-pressed="true"] .chk{display:inline}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .sw{
+    appearance:none;position:relative;border:3px solid var(--line);border-radius:18px;
+    background:var(--panel);padding:10px 8px 8px;min-height:124px;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    color:var(--ink);font-size:clamp(15px,4.4vw,17px);font-weight:700;line-height:1.9;letter-spacing:.02em;white-space:nowrap;cursor:pointer;
+  }
+  .sw:active{transform:scale(.97)}
+  .sw i{display:block;width:100%;height:50px;border-radius:10px;background:var(--c);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+  .sw.on{border-color:var(--ink);border-width:4px;padding:9px 7px 7px;box-shadow:0 0 22px -4px var(--c)}
+  .sw b{
+    position:absolute;top:-12px;right:-10px;min-width:36px;height:36px;padding:0 4px;box-sizing:border-box;
+    border-radius:18px;background:var(--sel-bg);color:var(--sel-ink);border:3px solid var(--bg);
+    font-size:18px;font-weight:700;line-height:30px;letter-spacing:0;text-align:center;display:none
+  }
+  .sw.on b{display:block}
+
+  .tools{display:flex;gap:14px}
+  .mini{
+    flex:1;appearance:none;border:3px solid var(--line);background:var(--panel);color:var(--ink);
+    border-radius:16px;min-height:60px;padding:8px 10px;font-size:16px;font-weight:700;line-height:1.9;cursor:pointer
+  }
+  .seqbox{padding:14px 16px;border-radius:16px;background:var(--panel);border:2px solid var(--line);display:flex;flex-direction:column;gap:8px}
+  .seqbox h3{margin:0;font-size:15px;font-weight:700;color:var(--mute);line-height:2}
+  .seq{display:flex;gap:10px;flex-wrap:wrap;align-items:center;min-height:40px;margin:0;padding:0;list-style:none}
+  .seq li{
+    display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;
+    background:var(--c);border:2px solid var(--ink);color:#000;font-size:15px;font-weight:700;line-height:1;letter-spacing:0
+  }
+  .seq li.dk{color:#fff}
+  .seq .empty{width:auto;height:auto;border:0;background:none;color:var(--mute);font-size:16px;font-weight:400;line-height:2}
+  .hint{font-size:16px;color:var(--mute);margin:0}
+  .hint:empty{display:none}
+
+  .gowrap{margin-top:auto;display:flex;flex-direction:column;gap:20px}
+  .go{
+    appearance:none;border:0;border-radius:22px;min-height:88px;padding:12px;
+    background:var(--sel-bg);color:var(--sel-ink);font-size:28px;font-weight:700;line-height:1.7;letter-spacing:.14em;cursor:pointer;
+    box-shadow:0 10px 36px -10px var(--go,transparent);
+  }
+  .go:disabled{opacity:.4;box-shadow:none}
+  .note{margin:0;padding:16px 18px;border-radius:16px;border:2px solid var(--line);display:flex;flex-direction:column;gap:10px;list-style:none;font-size:15px;color:var(--mute)}
+  .note li{line-height:2.1}
+
+  /* 点灯画面（テーマに関係なく同じ見た目） */
+  .light{position:fixed;inset:0;background:#000;z-index:10;touch-action:none}
+  .hud{
+    position:absolute;left:0;right:0;bottom:0;padding:16px 20px calc(28px + env(safe-area-inset-bottom,0px));
+    display:flex;justify-content:space-between;align-items:center;gap:14px;transition:opacity .3s;
+  }
+  .hud.off{opacity:0;pointer-events:none}
+  .pill{background:#000;color:#fff;border:3px solid #fff;border-radius:999px;padding:8px 20px;font-size:20px;font-weight:700;line-height:1.9;letter-spacing:.08em}
+  .hud button{
+    appearance:none;border:3px solid #fff;border-radius:999px;min-height:66px;padding:8px 30px;
+    background:#000;color:#fff;font-size:22px;font-weight:700;line-height:1.8;letter-spacing:.1em;cursor:pointer
+  }
+  .hud button:focus-visible{outline-color:#FFE600}
+  .toast{
+    position:absolute;top:calc(20px + env(safe-area-inset-top,0px));left:20px;right:20px;text-align:center;
+    font-size:18px;font-weight:700;color:#fff;background:#000;border:3px solid #fff;border-radius:16px;
+    padding:10px 14px;line-height:2;transition:opacity .4s
+  }
+  @media (prefers-reduced-motion: reduce){ .sw:active{transform:none} .hud,.toast{transition:none} }
+</style>
+
+<main class="setup" id="setup">
+  <header>
+    <h1>ペンライト</h1>
+    <div class="rainbow" role="img" aria-label="使える9色の見本：赤、オレンジ、黄色、黄緑、緑、水色、青、紫、ピンク">
+      <span style="background:#FF0000"></span><span style="background:#FF7A00"></span><span style="background:#FFE600"></span><span style="background:#9CFF00"></span><span style="background:#00A33A"></span><span style="background:#00D8FF"></span><span style="background:#0033FF"></span><span style="background:#9A00FF"></span><span style="background:#FF3FA8"></span>
+    </div>
+    <p class="rb"><ruby>光<rt>ひか</rt></ruby>り<ruby>方<rt>かた</rt></ruby>と<ruby>色<rt>いろ</rt></ruby>を<ruby>選<rt>えら</rt></ruby>んでください。</p>
+  </header>
+
+  <section aria-labelledby="modeLabel">
+    <h2 id="modeLabel" class="rb"><span class="step" aria-hidden="true">1</span><span class="sr">手順1、</span><ruby>光<rt>ひか</rt></ruby>り<ruby>方<rt>かた</rt></ruby></h2>
+    <div class="modes" role="group" aria-labelledby="modeLabel">
+      <button id="m-single" aria-pressed="true" aria-describedby="d-single-sr">
+        <span><span class="chk" aria-hidden="true">✓ </span>ずっと<ruby>点灯<rt>てんとう</rt></ruby></span>
+        <small id="d-single">1<ruby>色<rt>しょく</rt></ruby>で<ruby>光<rt>ひか</rt></ruby>り<ruby>続<rt>つづ</rt></ruby>ける</small>
+      </button>
+      <button id="m-multi" aria-pressed="false" aria-describedby="d-multi-sr">
+        <span><span class="chk" aria-hidden="true">✓ </span>カラーチェンジ</span>
+        <small id="d-multi"><ruby>色<rt>いろ</rt></ruby>が<ruby>順番<rt>じゅんばん</rt></ruby>に<ruby>変<rt>か</rt></ruby>わる</small>
+      </button>
+    </div>
+  </section>
+
+  <section aria-labelledby="colorLabel">
+    <h2 id="colorLabel"></h2>
+    <div class="grid" id="grid" role="group" aria-labelledby="colorLabel"></div>
+    <div id="multiTools" hidden>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div class="tools">
+          <button class="mini" id="all">9<ruby>色<rt>しょく</rt></ruby>すべて</button>
+          <button class="mini" id="clear"><ruby>全部<rt>ぜんぶ</rt></ruby>はずす</button>
+        </div>
+        <div class="seqbox">
+          <h3 id="seqLabel" class="rb"><ruby>光<rt>ひか</rt></ruby>る<ruby>順番<rt>じゅんばん</rt></ruby></h3>
+          <ol class="seq" id="seq" aria-labelledby="seqLabel"></ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="gowrap">
+    <button class="go" id="go"><ruby>点灯<rt>てんとう</rt></ruby>する</button>
+    <ul class="note">
+      <li class="rb"><ruby>明<rt>あか</rt></ruby>るさは スマホの<ruby>設定<rt>せってい</rt></ruby>で <ruby>最大<rt>さいだい</rt></ruby>に</li>
+      <li class="rb"><ruby>光<rt>ひか</rt></ruby>っている<ruby>間<rt>あいだ</rt></ruby>に <ruby>画面<rt>がめん</rt></ruby>を<ruby>押<rt>お</rt></ruby>すと 「<ruby>戻<rt>もど</rt></ruby>る」ボタンが<ruby>出<rt>で</rt></ruby>ます</li>
+    </ul>
+  </div>
+</main>
+
+<div class="light" id="light" role="dialog" aria-modal="true" aria-label="点灯中" hidden>
+  <div class="toast rb" id="toast"><ruby>画面<rt>がめん</rt></ruby>を<ruby>押<rt>お</rt></ruby>すと 「<ruby>戻<rt>もど</rt></ruby>る」ボタンが<ruby>出<rt>で</rt></ruby>ます</div>
+  <div class="hud" id="hud">
+    <span class="pill" id="curName"></span>
+    <button id="back"><ruby>戻<rt>もど</rt></ruby>る</button>
+  </div>
+</div>
+
+<span id="d-single-sr" hidden>1色で光り続ける</span>
+<span id="d-multi-sr" hidden>色が順番に変わる</span>
+
+<div class="sr" id="announce" role="status" aria-live="polite"></div>
+
+<script>
+document.documentElement.lang = 'ja';
+
+// 読み上げ用：ふりがな（rt）を除いた文字だけを取り出す
+function plainText(html){
+  const d = document.createElement('div'); d.innerHTML = html;
+  d.querySelectorAll('rt,[aria-hidden="true"]').forEach(n=>n.remove());
+  return d.textContent.replace(/\s+/g,' ').trim();
+}
+// ふりがな付きの文は、画面には表示・読み上げは漢字のみ（二重読みを防ぐ）
+function setRuby(el, html){
+  el.innerHTML = `<span aria-hidden="true">${html}</span><span class="sr">${plainText(html)}</span>`;
+}
+function initRuby(){
+  document.querySelectorAll('.rb').forEach(el=>{ if(!el.dataset.done){ setRuby(el, el.innerHTML); el.dataset.done=1; } });
+  document.querySelectorAll('button').forEach(b=>{ if(!b.dataset.label) b.setAttribute('aria-label', plainText(b.querySelector('span:not(.chk)')?.innerHTML ?? b.innerHTML)); });
+}
+const say = t => { const a = document.getElementById('announce'); a.textContent=''; setTimeout(()=>a.textContent=t, 50); };
+
+const COLORS = [
+  {id:'red',    hex:'#FF0000', plain:'赤',     name:'<ruby>赤<rt>あか</rt></ruby>'},
+  {id:'orange', hex:'#FF7A00', plain:'オレンジ', name:'オレンジ'},
+  {id:'yellow', hex:'#FFE600', plain:'黄色',   name:'<ruby>黄色<rt>きいろ</rt></ruby>'},
+  {id:'lime',   hex:'#9CFF00', plain:'黄緑',   name:'<ruby>黄緑<rt>きみどり</rt></ruby>'},
+  {id:'green',  hex:'#00A33A', plain:'緑',     name:'<ruby>緑<rt>みどり</rt></ruby>'},
+  {id:'sky',    hex:'#00D8FF', plain:'水色',   name:'<ruby>水色<rt>みずいろ</rt></ruby>'},
+  {id:'blue',   hex:'#0033FF', plain:'青',     name:'<ruby>青<rt>あお</rt></ruby>', dk:1},
+  {id:'purple', hex:'#9A00FF', plain:'紫',     name:'<ruby>紫<rt>むらさき</rt></ruby>', dk:1},
+  {id:'pink',   hex:'#FF3FA8', plain:'ピンク', name:'ピンク'},
+];
+const byId = Object.fromEntries(COLORS.map(c=>[c.id,c]));
+// カラーチェンジ：2秒点灯→1秒かけて黒へ→1秒かけて次の色へ
+const P_HOLD = 2000, P_DOWN = 1000, P_UP = 1000, PULSE = P_HOLD+P_DOWN+P_UP;
+const $ = s => document.getElementById(s);
+const SHOKU = '<ruby>色<rt>しょく</rt></ruby>';
+
+let state = {mode:'single', single:'pink', multi:['red','yellow','sky','pink']};
+try{
+  const s = JSON.parse(localStorage.getItem('penlight')||'null');
+  if(s && typeof s==='object'){
+    if(s.mode==='single' || s.mode==='multi') state.mode = s.mode;
+    if(byId[s.single]) state.single = s.single;
+    if(Array.isArray(s.multi)) state.multi = [...new Set(s.multi.filter(id=>byId[id]))];
+  }
+}catch(e){}
+const save = () => { try{ localStorage.setItem('penlight', JSON.stringify(state)); }catch(e){} };
+
+const grid = $('grid');
+COLORS.forEach(c=>{
+  const b = document.createElement('button');
+  b.className='sw'; b.id='sw-'+c.id; b.style.setProperty('--c',c.hex); b.dataset.label='1';
+  b.innerHTML = `<i aria-hidden="true"></i><span aria-hidden="true">${c.name}</span><b aria-hidden="true"></b>`;
+  b.onclick = () => pick(c.id);
+  grid.appendChild(b);
+});
+
+function pick(id){
+  const c = byId[id];
+  if(state.mode==='single'){ state.single=id; say(`${c.plain}を選びました`); }
+  else{
+    const i = state.multi.indexOf(id);
+    if(i>=0){ state.multi.splice(i,1); say(`${c.plain}をはずしました。全部で${state.multi.length}色`); }
+    else{ state.multi.push(id); say(`${c.plain}を${state.multi.length}番目に追加しました`); }
+  }
+  save(); render();
+}
+
+function render(){
+  const single = state.mode==='single';
+  $('m-single').setAttribute('aria-pressed',single);
+  $('m-multi').setAttribute('aria-pressed',!single);
+  $('multiTools').hidden = single;
+  setRuby($('colorLabel'), single
+    ? `<span class="step" aria-hidden="true">2</span><span class="sr">手順2、</span><ruby>色<rt>いろ</rt></ruby>（1${SHOKU}）`
+    : `<span class="step" aria-hidden="true">2</span><span class="sr">手順2、</span><ruby>色<rt>いろ</rt></ruby>（${state.multi.length} / 9${SHOKU}）`);
+  COLORS.forEach(c=>{
+    const el = $('sw-'+c.id);
+    const idx = state.multi.indexOf(c.id);
+    const on = single ? state.single===c.id : idx>=0;
+    el.classList.toggle('on',on);
+    el.setAttribute('aria-pressed',on);
+    el.setAttribute('aria-label', c.plain + (!single && on ? `、${idx+1}番目` : ''));
+    el.querySelector('b').textContent = on ? (single ? '✓' : idx+1) : '';
+  });
+  const list = single ? [state.single] : state.multi;
+  $('seq').innerHTML = list.length
+    ? list.map((id,i)=>`<li class="${byId[id].dk?'dk':''}" style="--c:${byId[id].hex}"><span aria-hidden="true">${i+1}</span><span class="sr">${i+1}番目 ${byId[id].plain}</span></li>`).join('')
+    : `<li class="empty"><span aria-hidden="true"><ruby>色<rt>いろ</rt></ruby>を<ruby>押<rt>お</rt></ruby>して<ruby>追加<rt>ついか</rt></ruby></span><span class="sr">色を押して追加してください</span></li>`;
+  $('go').disabled = list.length===0;
+  $('go').style.setProperty('--go', list[0]?byId[list[0]].hex:'transparent');
+}
+$('m-single').onclick = ()=>{state.mode='single';save();render();say('ずっと点灯を選びました');};
+$('m-multi').onclick  = ()=>{state.mode='multi'; save();render();say('カラーチェンジを選びました');};
+$('all').onclick   = ()=>{state.multi = COLORS.map(c=>c.id); save(); render(); say('9色すべてを選びました');};
+$('clear').onclick = ()=>{state.multi = []; save(); render(); say('すべての色をはずしました');};
+initRuby();
+render();
+
+// ---- 点灯 ----
+const light = $('light'), hud = $('hud'), toast = $('toast');
+let raf=0, t0=0, seq=[], blink=false, wakeLock=null, hudTimer=0, toastTimer=0, lastName='', session=0;
+
+const toRGB = h => [1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+const ease = t => t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+
+function frame(now){
+  const n = seq.length;
+  let rgb, c;
+  if(!blink){ c = seq[0]; rgb = c.rgb; }            // ずっと点灯：同じ色のまま
+  else{
+    // カラーチェンジ：2秒点灯 → 1秒かけて黒へ → 1秒かけて次の色へ（1色なら同じ色へ戻る）
+    const e = Math.max(0, now-t0) % (PULSE*n);
+    const i = Math.floor(e/PULSE), p = e - i*PULSE;
+    const a = seq[i], b = seq[(i+1)%n];
+    if(p < P_HOLD){ c = a; rgb = a.rgb; }
+    else if(p < P_HOLD+P_DOWN){ c = a; const f = 1-ease((p-P_HOLD)/P_DOWN); rgb = a.rgb.map(v=>Math.round(v*f)); }
+    else { c = b; const f = ease((p-P_HOLD-P_DOWN)/P_UP); rgb = b.rgb.map(v=>Math.round(v*f)); }
+  }
+  light.style.background = `rgb(${rgb})`;
+  if(c.name!==lastName){ setRuby($('curName'), c.name); lastName = c.name; }
+  raf = requestAnimationFrame(frame);
+}
+
+async function keepAwake(){
+  try{
+    if(!('wakeLock' in navigator) || (wakeLock && !wakeLock.released)) return;
+    const lock = await navigator.wakeLock.request('screen');
+    if(light.hidden){ lock.release().catch(()=>{}); return; }   // すでに戻っていたら手放す
+    wakeLock = lock;
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{ if(!light.hidden && document.visibilityState==='visible') keepAwake(); });
+
+function showHud(){
+  hud.classList.remove('off'); clearTimeout(hudTimer);
+  hudTimer = setTimeout(()=>hud.classList.add('off'), 5000);
+}
+
+$('go').onclick = async ()=>{
+  const ids = state.mode==='single' ? [state.single] : state.multi;
+  if(!ids.length) return;
+  seq = ids.map(id=>({name:byId[id].name, rgb:toRGB(byId[id].hex)}));
+  blink = state.mode==='multi';
+  lastName = '';
+  const my = ++session;
+  light.hidden = false;
+  $('setup').setAttribute('aria-hidden','true');
+  $('setup').inert = true;
+  // 点灯は全画面の結果を待たずにすぐ始める
+  t0 = performance.now();
+  cancelAnimationFrame(raf); raf = requestAnimationFrame(frame);
+  keepAwake();
+  clearTimeout(toastTimer); toast.style.opacity = 1; toastTimer = setTimeout(()=>toast.style.opacity=0, 4000);
+  try{
+    const de = document.documentElement;
+    const req = de.requestFullscreen ? de.requestFullscreen({navigationUI:'hide'}) : de.webkitRequestFullscreen?.();
+    await req;
+  }catch(e){}
+  if(my!==session || light.hidden){ exitFull(); return; }
+  showHud();
+  $('back').focus({preventScroll:true});
+  say(state.mode==='single' ? `${byId[ids[0]].plain}で点灯しました` : `${ids.length}色のカラーチェンジで点灯しました`);
+};
+light.addEventListener('click', e=>{ if(!e.target.closest('#back')) showHud(); });
+document.addEventListener('keydown', e=>{
+  if(light.hidden) return;
+  if(e.key==='Escape') $('back').click(); else showHud();
+});
+$('back').addEventListener('focus', showHud);
+function exitFull(){
+  try{
+    if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    else if(document.webkitFullscreenElement) document.webkitExitFullscreen?.();
+  }catch(e){}
+}
+$('back').onclick = async ()=>{
+  session++;
+  cancelAnimationFrame(raf);
+  clearTimeout(hudTimer); clearTimeout(toastTimer);
+  light.hidden = true;
+  $('setup').removeAttribute('aria-hidden');
+  $('setup').inert = false;
+  try{ await wakeLock?.release(); }catch(e){} wakeLock=null;
+  exitFull();
+  $('go').focus({preventScroll:true});
+  say('点灯を終わりました');
+};
+</script>
+
+</body></html>
