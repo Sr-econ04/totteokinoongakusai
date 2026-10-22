@@ -133,14 +133,27 @@
   .note li{line-height:2.1;word-break:keep-all}
 
   /* 点灯画面（テーマに関係なく同じ見た目） */
+  /* 背景はツールバーの裏まで塗るため大きめ（100lvh）。
+     ボタン・案内・パネルは「実際に見えている画面」を基準に置く（position:fixed）。
+     iPhoneのSafariで、ツールバーが出ているときにパネルの下が隠れないようにするため */
   .light{position:fixed;top:0;left:0;right:0;bottom:0;min-height:100lvh;background:#000;z-index:10;touch-action:none}
   /* 点灯中は後ろのページを消し、スクロールも止める（後ろが透けてガタつくのを防ぐ） */
   html.lit,html.lit body{overflow:hidden;overscroll-behavior:none}
   .hud{
-    position:absolute;left:0;right:0;top:0;padding:calc(20px + env(safe-area-inset-top,0px)) 20px 16px;
-    display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;transition:opacity .3s;
+    position:fixed;left:0;right:0;top:0;padding:calc(20px + env(safe-area-inset-top,0px)) 20px 16px;
+    display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:10px;transition:opacity .3s;
   }
-  .hudbtns{display:flex;gap:10px;margin-left:auto}
+  /* 色の名前の長さでボタンの位置が動かないように、
+     スマホ縦向きは「1段目：色の名前／2段目：色を選ぶ・戻る（半分ずつ）」に固定する */
+  .hud .pill{grid-column:1 / -1;justify-self:start;box-sizing:border-box;height:60px}   /* ふりがなの有無で高さが変わらないよう固定 */
+  .hudbtns{display:contents}
+  .hudbtns button{width:100%}
+  /* 横向きなど幅が広い画面は1段。色の名前は残りの幅の中で左に置き、ボタンは右端に固定 */
+  @media (min-width:560px){
+    .hud{grid-template-columns:1fr auto auto}
+    .hud .pill{grid-column:auto}
+    .hudbtns button{width:auto}
+  }
   .hud.off{opacity:0;pointer-events:none}
   .pill{display:inline-flex;align-items:center;gap:8px;background:#000;color:#fff;border:3px solid #fff;border-radius:999px;padding:6px 16px;font-size:clamp(17px,4.8vw,20px);white-space:nowrap;font-weight:700;line-height:1.9;letter-spacing:.08em}
   .hud button{
@@ -152,7 +165,7 @@
   /* 点灯中の色選び（画面の下半分を押すと出る）
      設定画面と同じ「白地に黒い文字・濃い枠」にして、暗い会場でもボタンの境目と選択中の色がはっきり分かるようにする */
   .palette{
-    position:absolute;left:0;right:0;bottom:0;z-index:2;max-height:100%;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;
+    position:fixed;left:0;right:0;bottom:0;z-index:2;max-height:100vh;max-height:100dvh;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;
     padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));
     background:#F4F4F7;color:#111118;border-top:4px solid #111118;border-radius:22px 22px 0 0;
     display:flex;flex-direction:column;gap:10px;
@@ -196,7 +209,7 @@
     .palhead{line-height:1.7}
   }
   .toast{
-    position:absolute;bottom:calc(28px + env(safe-area-inset-bottom,0px));left:20px;right:20px;text-align:center;pointer-events:none;
+    position:fixed;bottom:calc(28px + env(safe-area-inset-bottom,0px));left:20px;right:20px;text-align:center;pointer-events:none;
     font-size:clamp(14px,4.2vw,18px);font-weight:700;letter-spacing:.02em;text-wrap:balance;word-break:keep-all;color:#fff;background:#000;border:3px solid #fff;border-radius:16px;
     padding:10px 12px;line-height:2;transition:opacity .4s
   }
