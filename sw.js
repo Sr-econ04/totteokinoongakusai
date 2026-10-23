@@ -1,6 +1,6 @@
 // ペンライト：オフライン用の保存処理
 // 中身を更新したときは VERSION の数字を上げてください（古い保存分が入れ替わります）
-const VERSION = 'penlight-v9';
+const VERSION = 'penlight-v12';
 const FILES = [
   './',
   'index.html',
@@ -13,7 +13,8 @@ const FILES = [
 
 // 初回に全ファイルを保存
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache:'reload' … ブラウザの一時保存（数分間残る）を通さず、必ず最新のファイルを取りに行く
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 // 古い保存分を消す
@@ -33,7 +34,7 @@ self.addEventListener('fetch', e => {
     const cache = await caches.open(VERSION);
     const hit = await cache.match(req, { ignoreSearch: true })
       || (req.mode === 'navigate' ? await cache.match('index.html') : undefined);
-    const update = fetch(req)
+    const update = fetch(req, { cache: 'no-cache' })
       .then(res => { if (res && res.ok) cache.put(req, res.clone()); return res; })
       .catch(() => undefined);
     if (hit) { e.waitUntil(update); return hit; }
