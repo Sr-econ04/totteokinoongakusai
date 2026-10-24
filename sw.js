@@ -1,6 +1,6 @@
 // ペンライト：オフライン用の保存処理
 // 中身を更新したときは VERSION の数字を上げてください（古い保存分が入れ替わります）
-const VERSION = 'penlight-v12';
+const VERSION = 'penlight-v13';
 const FILES = [
   './',
   'index.html',
